@@ -10,7 +10,7 @@
 using nlohmann::json;
 using std::string;
 
-#define loop_val 30
+#define loop_val  300
 
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
@@ -89,8 +89,8 @@ int main() {
    *  for twiddle
    */
   steer_control.Init(0.0, 0.0 ,0.0);
-  std::vector<double> p = {0.4, 10, 0.0};
-  std::vector<double> dp = {0.4, 1,0.1};
+  std::vector<double> p = { 0.76685, 5.34329};
+  std::vector<double> dp = {0.382, 1.156,0.0};
 
   int para_index = 0;
   
@@ -134,6 +134,7 @@ int main() {
          static bool initialzed;
          static bool calibration;
          static bool negative;
+         static int counter;
 
          if(initialzed != true)
          {
@@ -151,43 +152,42 @@ int main() {
             run_info = run(steer_control,cte, ws, p, initialzed, calibration);   
             if (calibration == true)
             {
-              std::cout << "tested new Kp = " << p[0] << " Ki = " << p[2] << " Kd = " << p[1] << " para_index = " << para_index << std::endl;
+              std::cout << "tested new                     Kp = " << p[0] << " Ki = " << p[2] << " Kd = " << p[1] << " para_index = " << para_index << std::endl;
+              
               if(negative == false){           
                 p[para_index] += dp[para_index];                    
               }             
-              // para_index++;
-              // if (para_index >= 3)
-              //   para_index = 0;
-                           
-              //std::cout << "tuning run sum = " << sum_dp << "working on" << para_index << std::endl;
+              
             }  
             
-            double current_err = run_info.err;
-            
             if (calibration == true){
+              double current_err = run_info.err;
+              std::cout << "current err" << current_err << std::endl;
               calibration = false;
 
             if(negative == false)
-            {
+            {     
               if (current_err < best_err )
               {
                 std::cout << "better - para_index " << para_index << " next para_index " ;
                 std::cout << "now  dp = " << dp[0] << ", "<< dp[1] << ", " << dp[2] <<std::endl;
                 best_err = current_err;
-                dp[para_index] *= 1.1;                
+                dp[para_index] *= 1.1; 
+                counter++;               
                 para_index++;
-                if (para_index >= 3)
+                if (para_index >= 2)
                   para_index = 0;      
                 std::cout << para_index <<std::endl;          
                 negative = false;
-                std::cout << "next dp = " << dp[0] << ", "<< dp[1] << ", " << dp[2] <<std::endl;
+                std::cout << "new dp = " << dp[0] << ", "<< dp[1] << ", " << dp[2] <<std::endl;
               }
               else
               {
-                std::cout << "2-0 worse current Kp = " << p[0] << "Ki = " << p[2] << "Kd = " << p[1] << "Para_index = " << para_index<<std::endl;
-                negative = true;                
+                std::cout << "2-0 worse current Kp = " << p[0] << "Ki = " << p[2] << "Kd = " << p[1] << " Para_index = " << para_index<<"counter  = " <<  counter <<std::endl;
+                negative = true; 
+                counter++;               
                 p[para_index] -= 2*dp[para_index];
-                std::cout << "2-1          next Kp = " << p[0] << "Ki = " << p[2] << "Kd = " << p[1] << "Para_index = " << para_index<<std::endl;                  
+                std::cout << "2-1          next Kp = " << p[0] << "Ki = " << p[2] << "Kd = " << p[1] << " Para_index = " << para_index<<"counter  = " <<  counter <<std::endl;                  
               }
             }
             else
@@ -202,12 +202,13 @@ int main() {
               }
               else
               {
+                counter++;
                 p[para_index] += dp[para_index];
                 dp[para_index] *= 0.9;
-                std::cout << "3-2 restore       Kp = " << p[0] << "Ki = " << p[2] << "Kd = " << p[1]  << "Para_index " << para_index << std::endl;                
+                std::cout << "3-2 restore       Kp = " << p[0] << "Ki = " << p[2] << "Kd = " << p[1]  << " Para_index " << para_index << "counter  = " <<  counter << std::endl;                
               }
               para_index++;
-              if (para_index >= 3)
+              if (para_index >= 2)
                 para_index = 0;
                             
             }
