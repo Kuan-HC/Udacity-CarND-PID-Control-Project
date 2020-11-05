@@ -19,6 +19,8 @@ class PID {
    */
   void Init(double Kp_, double Ki_, double Kd_);
 
+  void SetPara(double Kp_, double Ki_, double Kd_);
+
   /**
    * Update the PID error variables given cross track error.
    * @param cte The current cross track error
@@ -30,6 +32,9 @@ class PID {
    * @output The total PID error
    */
   double TotalError();
+
+
+  double output();
 
  private:
   /**
@@ -45,6 +50,12 @@ class PID {
   double Kp;
   double Ki;
   double Kd;
+
+  /**
+   * Previous CTE for calculate D 
+  */
+   double last_cte;
+
 };
 
 #endif  // PID_H
