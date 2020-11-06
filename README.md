@@ -49,6 +49,19 @@ The simulator will provide  the cross track error (CTE) as input for PID control
 * Derivative component aims at flattening the error trajectory into a horizontal line, damping the force applied, and so reduces overshoot
   A pure D controller cannot bring the system to its setpoint
 ## Paramater Tuning  
+#### Tuning Source Code: twiddle.cpp
+1. Check system bias, set ```steer = 0```, observe vehicle behavior in simulator.  
+     During simulation ```angle = 0``` and vehicle dirves straight forward, therefore system is bias free, integral component is not necessary. 
+
+2. Initial twiddle parameter parameter , ```para = {0.5, 1.0, 0.0}   delta_p = {0.5, 1.0, 0.0}  ```   each test   ```loop_val 450```  
+     
+
+3.  Wait tunning process finished when ```delta_p[0]+delta_p[1]) < 0.2```
+     <img src="img/End_Tunning.png" width = "600"/>
+
+4. Final PID parameter ```Kp = 1.28212  Kd = 8.226```
+     
+
 
 
 

@@ -11,7 +11,7 @@ using std::cout;
 using std::endl;
 using std::string;
 
-#define loop_val 30
+#define loop_val 450
 
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
@@ -69,19 +69,19 @@ ST_ERR run(PID &controller, const double &cte, uWS::WebSocket<uWS::SERVER> ws, s
    static int counter;
    static double err;
    ST_ERR output;
-
-   controller.SetPara(para[0], para[2], para[1]);
-
-   err += cte * cte;
+   ++counter;
+   controller.SetPara(para[0], para[2], para[1]);   
    controller.UpdateError(cte);
    output.steer = controller.output();
    flag = false;
-
-   ++counter;
+   /* ditch first 10 loop err*/
+   if (counter>=10)
+      err += cte * cte;
+   
    if (counter >= loop_val)
    {
       controller.Init(para[0], para[2], para[1]);
-      output.err = err / (double)loop_val;
+      output.err = err / (double)(loop_val-10);
       err = 0.0;
       std::cout << "    reset simulator!  avg_err = " << output.err << std::endl;
       reset_simulator(ws);
@@ -100,8 +100,8 @@ int main()
    * TODO: Initialize the pid variable.
    */
    steer_control.Init(0.0, 0.0, 0.0);
-   std::vector<double> para = {0.2, 0.5, 0.0};
-   std::vector<double> delta_p = {0.1, 0.25, 0.0};
+   std::vector<double> para = {0.5, 1.0, 0.0};
+   std::vector<double> delta_p = {0.5, 1.0, 0.0};
    tune_state state;
 
    h.onMessage([&steer_control, &para, &delta_p, &state](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
@@ -141,7 +141,8 @@ int main()
                static bool check_flag;
                static bool initialized;
                static unsigned short para_index;
-
+               if((delta_p[0]+delta_p[1]) > 0.2)
+               {
                if (initialized != true)
                {
 
@@ -175,6 +176,7 @@ int main()
                         if (current_err < best_err)
                         {
                            best_err = current_err;
+                           delta_p[para_index] = delta_p[para_index] * 1.1;
                            state = tune_next;
                            cout << "Better than previous" << endl;
                         }
@@ -190,6 +192,7 @@ int main()
                         if (current_err < best_err)
                         {
                            best_err = current_err;
+                           delta_p[para_index] = delta_p[para_index] * 1.1;
                            state = tune_next;
                            cout << "Result is better for -2*delta_p parameter Kp" << endl;
                         }
@@ -208,8 +211,7 @@ int main()
 
                      switch (state)
                      {
-                     case tune_next:
-                        delta_p[para_index] = delta_p[para_index] * 1.1;
+                     case tune_next:                        
                         para_index = (para_index + 1) % 2;
                         para[para_index] += delta_p[para_index];
                         test_counter++;
@@ -230,6 +232,12 @@ int main()
                      }
                   }
                }
+               }
+               else
+               {
+                  cout << "tuning finished" <<endl;
+               }
+               
 
                steer_value = ctrl_info.steer;
 
