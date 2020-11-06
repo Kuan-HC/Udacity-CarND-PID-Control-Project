@@ -1,5 +1,5 @@
 # Udacity-CarND-Controls-PID
-<img src="img/cover.gif" width = "600"/>  
+<img src="img/cover.gif" width = "500"/>  
 
 ## Goals
 This project implements a PID controller in C++ to maneuver the vehicle's steer angle and throttle around the track.
